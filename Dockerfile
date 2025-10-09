@@ -1,0 +1,43 @@
+FROM quay.io/keycloak/keycloak:25.0
+WORKDIR /opt/keycloak
+
+RUN /opt/keycloak/bin/kc.sh build --db=postgres
+
+ENV KC_HEALTH_ENABLED=true \
+    KC_METRICS_ENABLED=true
+
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
+CMD ["start", "--optimized"]
+
+
+# https://www.keycloak.org/server/containers
+# Multi-stage build example with health and metrics support enabled
+# and a Postgres database configuration
+# Please note that this is just an example, you might want to adjust it to your needs
+# and make sure to use proper certificates in production instead of the demo ones
+# Also, make sure to change the database connection settings to point to your database  
+
+#FROM quay.io/keycloak/keycloak:latest AS builder
+
+# Enable health and metrics support
+#ENV KC_HEALTH_ENABLED=true
+#ENV KC_METRICS_ENABLED=true
+
+# Configure a database vendor
+#ENV KC_DB=postgres
+
+#WORKDIR /opt/keycloak
+# for demonstration purposes only, please make sure to use proper certificates in production instead
+#RUN keytool -genkeypair -storepass password -storetype PKCS12 -keyalg RSA -keysize 2048 -dname "CN=server" -alias server -ext "SAN:c=DNS:localhost,IP:127.0.0.1" -keystore conf/server.keystore
+#RUN /opt/keycloak/bin/kc.sh build
+
+#FROM quay.io/keycloak/keycloak:latest
+#COPY --from=builder /opt/keycloak/ /opt/keycloak/
+
+# change these values to point to a running postgres instance
+#ENV KC_DB=postgres
+#ENV KC_DB_URL=<DBURL>
+#ENV KC_DB_USERNAME=<DBUSERNAME>
+#ENV KC_DB_PASSWORD=<DBPASSWORD>
+#ENV KC_HOSTNAME=localhost
+#ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
