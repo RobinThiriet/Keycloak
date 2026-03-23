@@ -1,0 +1,126 @@
+{
+  "id": "company",
+  "realm": "company",
+  "displayName": "Company Identity",
+  "displayNameHtml": "<div class=\"kc-logo-text\"><span>Company Identity</span></div>",
+  "enabled": true,
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": true,
+  "rememberMe": true,
+  "verifyEmail": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 10,
+  "defaultRole": {
+    "name": "default-roles-company"
+  },
+  "roles": {
+    "realm": [
+      {
+        "name": "platform-admin",
+        "description": "Administrative access to the identity platform"
+      },
+      {
+        "name": "manager",
+        "description": "Manager access to business applications"
+      },
+      {
+        "name": "user",
+        "description": "Standard user access"
+      }
+    ]
+  },
+  "groups": [
+    {
+      "name": "admins",
+      "realmRoles": [
+        "platform-admin",
+        "realm-admin"
+      ]
+    },
+    {
+      "name": "managers",
+      "realmRoles": [
+        "manager"
+      ]
+    },
+    {
+      "name": "employees",
+      "realmRoles": [
+        "user"
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "company-portal",
+      "name": "Company Portal",
+      "description": "Public client for the main web portal",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "https://app.example.com/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "https://app.example.com"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "company-api",
+      "name": "Company API",
+      "description": "Confidential client for backend to backend exchanges",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "ChangeThisClientSecret!",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
+    }
+  ],
+  "users": [
+    {
+      "username": "owner@company.local",
+      "email": "owner@company.local",
+      "firstName": "Platform",
+      "lastName": "Owner",
+      "enabled": true,
+      "emailVerified": true,
+      "groups": [
+        "/admins"
+      ],
+      "realmRoles": [
+        "platform-admin",
+        "realm-admin"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ChangeMe123!",
+          "temporary": true
+        }
+      ]
+    }
+  ],
+  "passwordPolicy": "length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername(undefined)",
+  "loginTheme": "company"
+}
