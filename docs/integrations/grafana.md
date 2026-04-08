@@ -1,61 +1,40 @@
-# Integration Grafana avec Keycloak
+# Intégration Grafana avec Keycloak
 
-## Objectif
+## Objet
 
-Configurer `Grafana` comme application tierce utilisant `Keycloak` en OpenID Connect pour le SSO.
+Ce document décrit comment intégrer `Grafana` à `Keycloak` en `OpenID Connect` afin de mettre en place un SSO pour une application tierce.
 
-Ce document suppose que:
+L'objectif n'est pas de faire de Grafana une partie de la plateforme IAM, mais de montrer comment une application cliente se raccorde proprement à Keycloak.
 
-- la plateforme Keycloak est déjà déployée
-- tu disposes d'un realm fonctionnel
-- tu veux intégrer Grafana proprement, sans mélanger son déploiement avec la stack IAM
+## Principe
 
-Un exemple de stack séparée est fourni dans:
+Dans un fonctionnement classique:
 
-- [deployments/grafana/docker-compose.yml](/root/Keycloak/deployments/grafana/docker-compose.yml)
-- [deployments/grafana/.env.example](/root/Keycloak/deployments/grafana/.env.example)
+- Keycloak porte l'identité
+- Grafana consomme cette identité
+- les rôles et groupes sont gérés dans Keycloak
+- Grafana applique ensuite ses propres droits en fonction des informations reçues
 
-## Architecture cible
+## Références du dépôt
 
-```mermaid
-flowchart LR
-    U[Utilisateur]
-    G[Grafana]
-    K[Keycloak]
+- [Checklist d'administration Keycloak](../keycloak-admin-checklist.md)
+- [Déploiement Grafana séparé](../../deployments/grafana/docker-compose.yml)
+- [Variables d'exemple Grafana](../../deployments/grafana/.env.example)
 
-    U --> G
-    G -->|OIDC| K
-    K --> G
-```
+## Préparation dans Keycloak
 
-## Informations à préparer
+Avant de configurer Grafana, vérifier dans le realm cible:
 
-Avant de configurer Grafana, définis:
+- le realm existe
+- les utilisateurs existent
+- les rôles existent
+- les groupes existent
+- le client `grafana-oauth` est créé
 
-- le nom du realm
-- le nom du client Keycloak
-- l'URL publique de Grafana
-- les rôles Keycloak à exploiter
+Exemple de structure:
 
-Exemple retenu dans cette documentation:
-
-- realm: `Grafana`
-- client: `grafana-oauth`
-- URL Grafana: `http://localhost:3000`
-
-## Etape 1 - Préparer Keycloak
-
-Dans le realm cible:
-
-1. crée les rôles de realm si nécessaire:
-- `platform-admin`
-- `manager`
-- `user`
-2. crée les groupes si nécessaire:
-- `admins`
-- `managers`
-- `employees`
-3. affecte les rôles aux groupes
+- rôles: `platform-admin`, `manager`, `user`
+- groupes: `admins`, `managers`, `employees`
 
 Mapping recommandé:
 
@@ -63,25 +42,17 @@ Mapping recommandé:
 - `managers` -> `manager`
 - `employees` -> `user`
 
-## Etape 2 - Créer le client Grafana dans Keycloak
+## Configuration du client Grafana dans Keycloak
 
 Dans `Clients`:
 
-1. clique sur `Create client`
-2. choisis `OpenID Connect`
-3. saisis `grafana-oauth`
-4. continue vers l'étape suivante
+1. créer un client `OpenID Connect`
+2. définir `Client ID`: `grafana-oauth`
+3. activer `Client authentication`
+4. laisser `Standard flow` activé
+5. désactiver les flows non nécessaires
 
-Réglages de capacité:
-
-- `Client authentication`: `ON`
-- `Authorization`: `OFF`
-- `Standard flow`: `ON`
-- `Direct access grants`: `OFF`
-- `Implicit flow`: `OFF`
-- `Service accounts roles`: `OFF`
-
-Réglages d'URL:
+Valeurs usuelles:
 
 - `Root URL`: `http://localhost:3000`
 - `Home URL`: `http://localhost:3000`
@@ -90,71 +61,31 @@ Réglages d'URL:
 - `Web origins`: `http://localhost:3000`
 - `Admin URL`: `http://localhost:3000`
 
-## Etape 3 - Récupérer le secret du client
+Dans `Credentials`, récupérer ensuite le `Client secret`.
 
-Dans `Clients` -> `grafana-oauth` -> `Credentials`:
+## Configuration de Grafana
 
-1. copie le `Client secret`
-2. stocke-le dans ton mécanisme habituel de secrets
+La configuration du SSO Grafana peut être faite:
 
-## Etape 4 - Configurer Grafana
+- directement dans l'interface Grafana
+- ou, à titre indicatif, par variables d'environnement
 
-### Option recommandée
+L'approche la plus lisible pour comprendre le fonctionnement reste la configuration dans l'interface web Grafana.
 
-Utiliser la stack séparée fournie dans `deployments/grafana/`, sans injecter la configuration SSO par variables.
-
-Exemple:
-
-```bash
-cd deployments/grafana
-cp .env.example .env
-docker compose up -d
-```
-
-Dans ce mode:
-
-- Grafana tourne dans sa propre stack
-- Keycloak reste dans la stack IAM
-- la configuration SSO se fait directement dans l'interface Grafana
-- les paramètres OAuth ne sont pas imposés par des variables d'environnement
-
-### Pourquoi cette approche
-
-Si tu définis `GF_AUTH_GENERIC_OAUTH_*` dans l'environnement:
-
-- Grafana prend ces valeurs comme source de vérité
-- le paramétrage manuel dans le GUI devient plus difficile à comprendre
-- certaines options peuvent sembler "bloquées" ou déjà remplies par l'infrastructure
-
-Pour un apprentissage clair, il est préférable de:
-
-- garder un `docker-compose` Grafana minimal
-- configurer Generic OAuth directement dans l'interface Grafana
-
-### Variables minimales réellement utiles
-
-Dans la stack Grafana fournie, seules les variables d'exploitation locale sont conservées:
-
-```env
-GF_SECURITY_ADMIN_USER=admin
-GF_SECURITY_ADMIN_PASSWORD=ChangeThisGrafanaAdminPassword!
-GF_SERVER_ROOT_URL=http://localhost:3000
-```
-
-### Configuration manuelle dans le GUI Grafana
+## Paramétrage manuel dans Grafana
 
 Dans Grafana:
 
-1. ouvre `Administration`
-2. ouvre `Authentication`
-3. ouvre `Generic OAuth`
-4. active `Generic OAuth`
+1. ouvrir `Administration`
+2. ouvrir `Authentication`
+3. ouvrir `Generic OAuth`
+4. activer `Generic OAuth`
 
 Capture de référence:
 
 ![Configuration Generic OAuth dans Grafana](../images/grafana-generic-oauth-settings.png)
 
-Renseigne les champs suivants:
+Renseigner les champs suivants:
 
 `Display name`
 
@@ -166,7 +97,7 @@ Renseigne les champs suivants:
 
 `Client secret`
 
-- colle le secret récupéré dans Keycloak
+- valeur récupérée dans Keycloak
 
 `Auth style`
 
@@ -183,12 +114,12 @@ Renseigne les champs suivants:
 `Token URL`
 
 - si Grafana tourne dans Docker: `http://host.docker.internal:8080/realms/Grafana/protocol/openid-connect/token`
-- si Grafana tourne hors Docker: `http://localhost:8080/realms/Grafana/protocol/openid-connect/token`
+- sinon: `http://localhost:8080/realms/Grafana/protocol/openid-connect/token`
 
 `API URL`
 
 - si Grafana tourne dans Docker: `http://host.docker.internal:8080/realms/Grafana/protocol/openid-connect/userinfo`
-- si Grafana tourne hors Docker: `http://localhost:8080/realms/Grafana/protocol/openid-connect/userinfo`
+- sinon: `http://localhost:8080/realms/Grafana/protocol/openid-connect/userinfo`
 
 `Allow sign up`
 
@@ -196,13 +127,13 @@ Renseigne les champs suivants:
 
 `Auto login`
 
-- `OFF` au début, pour faciliter les tests
+- `OFF` au démarrage du projet
 
 `Sign out redirect URL`
 
 - `http://localhost:8080/realms/Grafana/protocol/openid-connect/logout?post_logout_redirect_uri=http://localhost:3000`
 
-Dans la section `User mapping`, renseigne:
+Dans `User mapping`, renseigner:
 
 `Login field path`
 
@@ -222,55 +153,54 @@ Dans la section `User mapping`, renseigne:
 contains(realm_access.roles[*], 'platform-admin') && 'Admin' || contains(realm_access.roles[*], 'manager') && 'Editor' || 'Viewer'
 ```
 
-Puis sauvegarde.
+Sauvegarder ensuite la configuration.
 
-### Tableau de correspondance
+## Répartition des responsabilités
 
-Le tableau suivant permet de savoir rapidement où chaque paramètre doit être défini.
-
-| Sujet | Keycloak GUI | Grafana GUI | Variable d'environnement |
+| Sujet | Keycloak | Grafana | Variable d'environnement |
 | --- | --- | --- | --- |
-| Nom du realm | oui | non | indirectement via les URL |
-| Client ID | oui | oui | `GF_AUTH_GENERIC_OAUTH_CLIENT_ID` |
-| Client secret | oui | oui | `GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET` |
+| Realm | oui | non | indirectement via les URL |
+| Client ID | oui | oui | possible |
+| Client secret | oui | oui | possible |
 | Redirect URI | oui | non | non |
 | Web origins | oui | non | non |
-| Auth URL | non | oui | `GF_AUTH_GENERIC_OAUTH_AUTH_URL` |
-| Token URL | non | oui | `GF_AUTH_GENERIC_OAUTH_TOKEN_URL` |
-| API URL / UserInfo | non | oui | `GF_AUTH_GENERIC_OAUTH_API_URL` |
-| Scopes | non | oui | `GF_AUTH_GENERIC_OAUTH_SCOPES` |
-| Display name du bouton SSO | non | oui | `GF_AUTH_GENERIC_OAUTH_NAME` |
-| Allow sign up | non | oui | `GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP` |
-| Auto login | non | oui | selon méthode de déploiement |
-| Login field path | non | oui | `GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH` |
-| Name field path | non | oui | `GF_AUTH_GENERIC_OAUTH_NAME_ATTRIBUTE_PATH` |
-| Email field path | non | oui | `GF_AUTH_GENERIC_OAUTH_EMAIL_ATTRIBUTE_PATH` |
-| Role attribute path | non | oui | `GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH` |
-| Sign out redirect URL | partiellement, via logout client | oui | `GF_AUTH_SIGNOUT_REDIRECT_URL` |
-| Utilisateurs, groupes, rôles | oui | non | non |
+| Auth URL | non | oui | possible |
+| Token URL | non | oui | possible |
+| API URL | non | oui | possible |
+| Scopes | non | oui | possible |
+| Display name SSO | non | oui | possible |
+| Mapping login / nom / email | non | oui | possible |
+| Mapping des rôles Grafana | non | oui | possible |
+| Utilisateurs / groupes / rôles | oui | non | non |
 
-Règle simple:
+Règle de lecture:
 
-- ce qui décrit l'identité et le client OIDC se configure dans Keycloak
-- ce qui décrit comment Grafana consomme ce client se configure dans Grafana
-- les variables d'environnement servent à automatiser la configuration Grafana, pas à remplacer Keycloak
+- Keycloak porte la configuration d'identité
+- Grafana porte la configuration de consommation OAuth
+- les variables d'environnement servent uniquement à automatiser ce paramétrage si nécessaire
 
-### Quand utiliser les variables d'environnement
+## Variables d'environnement
 
-L'approche par variables est utile si:
+Le déploiement fourni dans `deployments/grafana/` reste volontairement minimal.
 
-- tu veux automatiser complètement le déploiement
-- tu ne veux pas dépendre d'un réglage manuel dans l'interface
-- tu veux versionner la configuration non sensible
+Les variables conservées servent uniquement au fonctionnement local de Grafana:
 
-En revanche, pour comprendre le fonctionnement, le GUI est souvent plus pédagogique.
+```env
+GF_SECURITY_ADMIN_USER=admin
+GF_SECURITY_ADMIN_PASSWORD=ChangeThisGrafanaAdminPassword!
+GF_SERVER_ROOT_URL=http://localhost:3000
+```
 
-## Etape 5 - Tester le SSO
+La configuration OAuth peut être injectée par variables si besoin, mais ce dépôt la présente avant tout dans l'interface Grafana.
 
-1. ouvre Grafana
-2. clique sur `Sign in with Keycloak SSO`
-3. authentifie-toi dans Keycloak
-4. vérifie le rôle final dans Grafana
+## Validation
+
+Après configuration:
+
+1. ouvrir Grafana
+2. cliquer sur `Sign in with Keycloak SSO`
+3. s'authentifier dans Keycloak
+4. vérifier le rôle obtenu dans Grafana
 
 Capture de référence:
 
@@ -284,54 +214,25 @@ Le mapping proposé est:
 - `manager` -> `Editor`
 - autre utilisateur authentifié -> `Viewer`
 
-## Contrôles à faire
-
-- l'URL de redirection pointe vers le bon realm
-- le client `grafana-oauth` existe dans Keycloak
-- `Client authentication` est activé
-- le secret Grafana correspond au secret Keycloak
-- l'utilisateur de test existe dans le bon realm
-- les groupes et rôles sont cohérents
-
-## Dépannage rapide
+## Dépannage
 
 Si Grafana redirige vers un mauvais realm:
 
-- vérifie le nom du realm dans la configuration Grafana
-- redémarre Grafana après modification
-
-Si `User sync failed` apparaît:
-
-- vérifie que l'utilisateur existe bien dans le realm cible
-- vérifie qu'il a un mot de passe
-- vérifie qu'il appartient au bon groupe
-- si Grafana a déjà connu plusieurs tentatives incohérentes, repartir d'un volume Grafana neuf peut simplifier le diagnostic
+- vérifier le nom exact du realm dans Grafana
 
 Si Keycloak renvoie `Page not found`:
 
-- vérifie que le realm existe vraiment
-- vérifie la casse exacte du nom du realm
+- vérifier que le realm existe
+- vérifier la casse du nom du realm
 
-Si le login réussit mais que les droits sont faux:
+Si `User sync failed` apparaît:
 
-- vérifie les groupes de l'utilisateur
-- vérifie le `Role mapping`
-- vérifie l'expression `GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH`
+- vérifier que l'utilisateur existe bien dans le realm cible
+- vérifier qu'il dispose d'un mot de passe
+- vérifier son groupe ou ses rôles
+- si nécessaire, repartir d'une instance Grafana neuve pour éliminer un état local incohérent
 
-## Captures disponibles
+Si l'authentification réussit mais que les droits sont incorrects:
 
-Les captures fournies dans le dépôt peuvent être utilisées comme support visuel pendant l'intégration:
-
-- [keycloak-admin-login.png](/root/Keycloak/docs/images/keycloak-admin-login.png)
-- [keycloak-create-realm.png](/root/Keycloak/docs/images/keycloak-create-realm.png)
-- [keycloak-user-details.png](/root/Keycloak/docs/images/keycloak-user-details.png)
-- [keycloak-group-role-mapping.png](/root/Keycloak/docs/images/keycloak-group-role-mapping.png)
-- [keycloak-user-set-password.png](/root/Keycloak/docs/images/keycloak-user-set-password.png)
-- [keycloak-groups-overview.png](/root/Keycloak/docs/images/keycloak-groups-overview.png)
-- [keycloak-client-grafana-settings.png](/root/Keycloak/docs/images/keycloak-client-grafana-settings.png)
-- [keycloak-client-grafana-authentication.png](/root/Keycloak/docs/images/keycloak-client-grafana-authentication.png)
-- [keycloak-client-grafana-credentials.png](/root/Keycloak/docs/images/keycloak-client-grafana-credentials.png)
-- [grafana-sso-error-page-not-found.png](/root/Keycloak/docs/images/grafana-sso-error-page-not-found.png)
-- [grafana-sso-realm-url.png](/root/Keycloak/docs/images/grafana-sso-realm-url.png)
-- [grafana-generic-oauth-settings.png](/root/Keycloak/docs/images/grafana-generic-oauth-settings.png)
-- [grafana-login-screen.png](/root/Keycloak/docs/images/grafana-login-screen.png)
+- vérifier le `Role mapping` dans Keycloak
+- vérifier l'expression `Role attribute path` dans Grafana

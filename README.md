@@ -1,22 +1,21 @@
 # Keycloak IAM Platform
 
-Base Docker Compose professionnelle pour déployer `Keycloak` et `PostgreSQL` comme plateforme d'identité centralisée.
+Base Docker Compose pour déployer `Keycloak` avec `PostgreSQL` comme plateforme d'identité centralisée.
 
-Le dépôt est centré sur `Keycloak` uniquement:
+Le dépôt est organisé pour refléter une approche classique en entreprise:
 
-- la stack d'infrastructure ne contient pas les applications tierces
-- les intégrations SSO sont documentées séparément
-- la plateforme peut servir de socle pour Grafana, ArgoCD, Jenkins, Portainer ou d'autres applications
+- `Keycloak` est exploité comme service d'authentification transverse
+- les applications tierces sont intégrées séparément
+- chaque intégration SSO est documentée dans son propre guide
 
-## Positionnement
+## Objectif
 
-Dans un contexte professionnel, `Keycloak` est généralement opéré comme une brique transverse d'authentification.
+Ce projet a pour objectif de:
 
-Ce dépôt suit cette logique:
-
-- une stack dédiée `Keycloak + PostgreSQL`
-- une documentation d'administration IAM
-- une documentation séparée pour chaque intégration applicative
+- déployer une base Keycloak propre
+- structurer un realm, des rôles, des groupes et des utilisateurs
+- documenter l'intégration SSO d'applications tierces
+- fournir un cadre réutilisable pour d'autres applications
 
 ## Architecture
 
@@ -32,13 +31,13 @@ flowchart LR
     K --> P
 ```
 
-Documentation détaillée:
+## Documentation
 
-- [Architecture IAM](/root/Keycloak/docs/architecture.md)
-- [Checklist administration Keycloak](/root/Keycloak/docs/keycloak-admin-checklist.md)
-- [Integration Grafana SSO](/root/Keycloak/docs/integrations/grafana.md)
+- [Architecture IAM](docs/architecture.md)
+- [Checklist d'administration Keycloak](docs/keycloak-admin-checklist.md)
+- [Intégration Grafana](docs/integrations/grafana.md)
 
-## Structure du dépôt
+## Structure
 
 ```text
 .
@@ -58,106 +57,71 @@ Documentation détaillée:
 └── themes/
     └── company/
         └── login/
-            ├── resources/
-            │   └── css/
-            └── theme.properties
 ```
 
-## Services déployés
+## Services
 
 | Service | Rôle | URL locale |
 | --- | --- | --- |
 | Keycloak | Fournisseur d'identité | `http://localhost:8080` |
-| Keycloak Admin | Console d'administration | `http://localhost:8080/admin` |
+| Administration Keycloak | Console d'administration | `http://localhost:8080/admin` |
 | PostgreSQL | Base de données Keycloak | `localhost:5432` |
 | Health Keycloak | Supervision | `http://localhost:9000/health/ready` |
 
-## Démarrage rapide
+## Démarrage
 
-1. Copier les variables:
+1. Copier les variables d'exemple:
 
 ```bash
 cp .env.example .env
 ```
 
-2. Ajuster les secrets:
+2. Ajuster les paramètres nécessaires.
 
-```env
-KC_BOOTSTRAP_ADMIN_USERNAME=admin
-KC_BOOTSTRAP_ADMIN_PASSWORD=ChangeThisAdminPassword!
-KC_DB_PASSWORD=ChangeThisDatabasePassword!
-```
-
-3. Démarrer la plateforme:
+3. Démarrer Keycloak:
 
 ```bash
 docker compose up -d --build
 ```
 
-4. Ouvrir:
+4. Ouvrir l'administration:
 
 - `http://localhost:8080/admin`
 
-## Ce que couvre le dépôt
+## Intégration d'applications tierces
 
-Ce dépôt t'aide à:
+Le principe du dépôt est simple:
 
-- déployer Keycloak proprement
-- créer un realm manuellement
-- structurer rôles, groupes et utilisateurs
-- préparer des intégrations SSO avec des applications tierces
-- documenter proprement chaque intégration
+- Keycloak est déployé ici comme plateforme IAM
+- les applications tierces sont raccordées ensuite
+- chaque intégration est documentée séparément
 
-## Intégrations tierces
+Exemple fourni:
 
-Chaque application tierce devrait avoir sa propre fiche d'intégration.
+- [Grafana](docs/integrations/grafana.md)
 
-Exemple déjà documenté:
+Un exemple de déploiement Grafana séparé est également fourni:
 
-- [Grafana](/root/Keycloak/docs/integrations/grafana.md)
+- [deployments/grafana/docker-compose.yml](deployments/grafana/docker-compose.yml)
 
-Exemple de stack séparée déjà fourni:
+## Variables d'environnement
 
-- [Grafana Docker Compose](/root/Keycloak/deployments/grafana/docker-compose.yml)
+Le fichier `.env` est proposé pour faciliter l'exécution locale.
 
-Une fiche d'intégration devrait contenir:
+Il reste indicatif:
 
-- le nom du client Keycloak
-- le protocole utilisé
-- les `redirect URIs`
-- les `web origins`
-- les rôles attendus
-- les variables à configurer dans l'application
-- les tests de validation
-
-## Gestion des variables et secrets
-
-Le fichier `.env` n'est pas obligatoire.
-
-En pratique:
-
-- `.env.example` documente les variables minimales
-- `.env` est pratique en local
-- en production, on préfère injecter les variables et secrets via l'outil de déploiement
-
-Exemples de solutions plus professionnelles:
-
-- variables CI/CD
-- Docker secrets
-- Kubernetes Secrets
-- HashiCorp Vault
-- AWS Secrets Manager
-- Azure Key Vault
+- en environnement local, il simplifie le démarrage
+- en environnement d'entreprise, les paramètres peuvent être injectés par le mécanisme de déploiement retenu
 
 ## Commandes utiles
 
-Lancer:
+Démarrer:
 
 ```bash
 docker compose up -d --build
 ```
 
-Voir les logs:
+Consulter les logs:
 
 ```bash
 docker compose logs -f keycloak
@@ -170,18 +134,17 @@ Arrêter:
 docker compose down
 ```
 
-Repartir de zéro:
+Réinitialiser complètement:
 
 ```bash
 docker compose down -v
 docker compose up -d --build
 ```
 
-## Recommandations de production
+## Recommandations
 
 - publier Keycloak derrière HTTPS
-- séparer la plateforme IAM des applications métiers
-- ne jamais versionner de secrets réels
-- créer un compte administrateur permanent et supprimer le compte bootstrap temporaire
+- créer un compte administrateur permanent
+- supprimer le compte bootstrap temporaire
 - sauvegarder PostgreSQL
-- tracer les intégrations SSO application par application
+- documenter chaque intégration SSO application par application

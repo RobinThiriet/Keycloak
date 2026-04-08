@@ -138,7 +138,7 @@ Pour intégrer une application comme Grafana:
 
 Guide disponible dans ce dépôt:
 
-- [Grafana](/root/Keycloak/docs/integrations/grafana.md)
+- [Grafana](integrations/grafana.md)
 
 ## Checklist 7 - Diagnostic rapide
 
