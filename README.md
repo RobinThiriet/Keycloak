@@ -47,9 +47,14 @@ Documentation détaillée:
 ├── README.md
 ├── docs/
 │   ├── architecture.md
+│   ├── images/
 │   ├── keycloak-admin-checklist.md
 │   └── integrations/
 │       └── grafana.md
+├── deployments/
+│   └── grafana/
+│       ├── .env.example
+│       └── docker-compose.yml
 └── themes/
     └── company/
         └── login/
@@ -110,6 +115,10 @@ Chaque application tierce devrait avoir sa propre fiche d'intégration.
 Exemple déjà documenté:
 
 - [Grafana](/root/Keycloak/docs/integrations/grafana.md)
+
+Exemple de stack séparée déjà fourni:
+
+- [Grafana Docker Compose](/root/Keycloak/deployments/grafana/docker-compose.yml)
 
 Une fiche d'intégration devrait contenir:
 

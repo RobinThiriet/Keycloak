@@ -10,6 +10,11 @@ Ce document suppose que:
 - tu disposes d'un realm fonctionnel
 - tu veux intégrer Grafana proprement, sans mélanger son déploiement avec la stack IAM
 
+Un exemple de stack séparée est fourni dans:
+
+- [deployments/grafana/docker-compose.yml](/root/Keycloak/deployments/grafana/docker-compose.yml)
+- [deployments/grafana/.env.example](/root/Keycloak/deployments/grafana/.env.example)
+
 ## Architecture cible
 
 ```mermaid
@@ -93,6 +98,24 @@ Dans `Clients` -> `grafana-oauth` -> `Credentials`:
 2. stocke-le dans ton mécanisme habituel de secrets
 
 ## Etape 4 - Configurer Grafana
+
+### Option recommandée
+
+Utiliser la stack séparée fournie dans `deployments/grafana/`.
+
+Exemple:
+
+```bash
+cd deployments/grafana
+cp .env.example .env
+docker compose up -d
+```
+
+Dans ce mode séparé:
+
+- Grafana tourne dans sa propre stack
+- Keycloak reste dans la stack IAM
+- `KEYCLOAK_INTERNAL_URL` utilise `http://host.docker.internal:8080`
 
 Exemple de variables à injecter dans la stack Grafana:
 
