@@ -224,6 +224,37 @@ contains(realm_access.roles[*], 'platform-admin') && 'Admin' || contains(realm_a
 
 Puis sauvegarde.
 
+### Tableau de correspondance
+
+Le tableau suivant permet de savoir rapidement où chaque paramètre doit être défini.
+
+| Sujet | Keycloak GUI | Grafana GUI | Variable d'environnement |
+| --- | --- | --- | --- |
+| Nom du realm | oui | non | indirectement via les URL |
+| Client ID | oui | oui | `GF_AUTH_GENERIC_OAUTH_CLIENT_ID` |
+| Client secret | oui | oui | `GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET` |
+| Redirect URI | oui | non | non |
+| Web origins | oui | non | non |
+| Auth URL | non | oui | `GF_AUTH_GENERIC_OAUTH_AUTH_URL` |
+| Token URL | non | oui | `GF_AUTH_GENERIC_OAUTH_TOKEN_URL` |
+| API URL / UserInfo | non | oui | `GF_AUTH_GENERIC_OAUTH_API_URL` |
+| Scopes | non | oui | `GF_AUTH_GENERIC_OAUTH_SCOPES` |
+| Display name du bouton SSO | non | oui | `GF_AUTH_GENERIC_OAUTH_NAME` |
+| Allow sign up | non | oui | `GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP` |
+| Auto login | non | oui | selon méthode de déploiement |
+| Login field path | non | oui | `GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH` |
+| Name field path | non | oui | `GF_AUTH_GENERIC_OAUTH_NAME_ATTRIBUTE_PATH` |
+| Email field path | non | oui | `GF_AUTH_GENERIC_OAUTH_EMAIL_ATTRIBUTE_PATH` |
+| Role attribute path | non | oui | `GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH` |
+| Sign out redirect URL | partiellement, via logout client | oui | `GF_AUTH_SIGNOUT_REDIRECT_URL` |
+| Utilisateurs, groupes, rôles | oui | non | non |
+
+Règle simple:
+
+- ce qui décrit l'identité et le client OIDC se configure dans Keycloak
+- ce qui décrit comment Grafana consomme ce client se configure dans Grafana
+- les variables d'environnement servent à automatiser la configuration Grafana, pas à remplacer Keycloak
+
 ### Quand utiliser les variables d'environnement
 
 L'approche par variables est utile si:
