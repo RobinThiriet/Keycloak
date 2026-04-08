@@ -124,6 +124,10 @@ GF_AUTH_DISABLE_LOGIN_FORM=false
 3. authentifie-toi dans Keycloak
 4. vérifie le rôle final dans Grafana
 
+Capture de référence:
+
+![Ecran de connexion Grafana](../../images/Screenshot_12.png)
+
 ## Mapping des rôles
 
 Le mapping proposé est:
@@ -158,3 +162,20 @@ Si le login réussit mais que les droits sont faux:
 - vérifie les groupes de l'utilisateur
 - vérifie le `Role mapping`
 - vérifie l'expression `GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH`
+
+## Captures disponibles
+
+Les captures fournies dans le dépôt peuvent être utilisées comme support visuel pendant l'intégration:
+
+- [Screenshot_1.png](/root/Keycloak/images/Screenshot_1.png)
+- [Screenshot_2.png](/root/Keycloak/images/Screenshot_2.png)
+- [Screenshot_3.png](/root/Keycloak/images/Screenshot_3.png)
+- [Screenshot_4.png](/root/Keycloak/images/Screenshot_4.png)
+- [Screenshot_5.png](/root/Keycloak/images/Screenshot_5.png)
+- [Screenshot_6.png](/root/Keycloak/images/Screenshot_6.png)
+- [Screenshot_7.png](/root/Keycloak/images/Screenshot_7.png)
+- [Screenshot_8.png](/root/Keycloak/images/Screenshot_8.png)
+- [Screenshot_9.png](/root/Keycloak/images/Screenshot_9.png)
+- [Screenshot_10.png](/root/Keycloak/images/Screenshot_10.png)
+- [Screenshot_11.png](/root/Keycloak/images/Screenshot_11.png)
+- [Screenshot_12.png](/root/Keycloak/images/Screenshot_12.png)

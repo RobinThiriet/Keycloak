@@ -30,6 +30,10 @@ Valeurs utiles:
 - utilisateur: `KC_BOOTSTRAP_ADMIN_USERNAME`
 - mot de passe: `KC_BOOTSTRAP_ADMIN_PASSWORD`
 
+Capture de référence:
+
+![Acces a l administration Keycloak](../images/Screenshot_1.png)
+
 ## Checklist 2 - Création du realm
 
 Chemin:
@@ -50,6 +54,10 @@ Réglages recommandés:
 - `Verify email`: `ON`
 - `Forgot password`: `ON`
 - `Remember me`: `ON`
+
+Capture de référence:
+
+![Creation du realm dans Keycloak](../images/Screenshot_2.png)
 
 ## Checklist 3 - Création des rôles
 
@@ -86,6 +94,12 @@ A faire:
 3. aller dans `Role mapping`
 4. assigner le rôle de realm correspondant
 
+Captures de référence:
+
+![Vue des groupes dans Keycloak](../images/Screenshot_6.png)
+
+![Role mapping du groupe admins](../images/Screenshot_4.png)
+
 ## Checklist 5 - Création des utilisateurs
 
 Chemin:
@@ -105,6 +119,12 @@ A faire:
 1. créer l'utilisateur
 2. définir son mot de passe dans `Credentials`
 3. lui affecter un groupe dans `Groups`
+
+Captures de référence:
+
+![Fiche utilisateur dans Keycloak](../images/Screenshot_3.png)
+
+![Definition du mot de passe utilisateur](../images/Screenshot_5.png)
 
 ## Checklist 6 - Intégration d'une application tierce
 
