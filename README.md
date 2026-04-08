@@ -8,7 +8,7 @@ Le projet fournit:
 - un realm Keycloak `company` importé automatiquement
 - un thème de connexion personnalisé
 - une configuration Grafana compatible SSO Keycloak
-- un guide pour configurer le client Grafana manuellement dans Keycloak
+- un guide pour construire manuellement le realm, les rôles, les groupes, les utilisateurs et le client Grafana dans Keycloak
 - une documentation GitHub exploitable en démonstration, recette et base projet
 
 ## Architecture
@@ -85,7 +85,13 @@ docker compose up -d --build
 
 ## Paramètres SSO recommandés
 
-Le dépôt prépare Grafana pour utiliser un client Keycloak nommé `grafana-oauth`, mais le client doit être créé manuellement dans l'interface d'administration Keycloak pour faciliter l'apprentissage et la maîtrise du paramétrage.
+Le dépôt prépare Grafana pour utiliser un client Keycloak nommé `grafana-oauth`, mais la documentation explique comment créer manuellement:
+
+- le realm `company`
+- les rôles `platform-admin`, `manager`, `user`
+- les groupes `admins`, `managers`, `employees`
+- les utilisateurs de test
+- le client OIDC `grafana-oauth`
 
 Le mapping de rôles proposé côté Grafana est:
 

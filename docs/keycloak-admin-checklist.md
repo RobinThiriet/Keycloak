@@ -8,13 +8,14 @@ Elle complète le guide détaillé [grafana-sso-step-by-step.md](/root/Keycloak/
 
 ```mermaid
 flowchart TD
-    A[1. Ouvrir Keycloak Admin] --> B[2. Choisir le realm company]
-    B --> C[3. Creer le client grafana-oauth]
-    C --> D[4. Copier le client secret]
-    D --> E[5. Mettre a jour .env]
-    E --> F[6. Redemarrer Grafana]
-    F --> G[7. Assigner roles ou groupes]
-    G --> H[8. Tester la connexion SSO]
+    A[1. Ouvrir Keycloak Admin] --> B[2. Creer le realm company]
+    B --> C[3. Creer roles et groupes]
+    C --> D[4. Creer utilisateurs]
+    D --> E[5. Creer le client grafana-oauth]
+    E --> F[6. Copier le client secret]
+    F --> G[7. Mettre a jour .env]
+    G --> H[8. Redemarrer Grafana]
+    H --> I[9. Tester la connexion SSO]
 ```
 
 ## Checklist 1 - Accès à l'admin
@@ -36,13 +37,124 @@ Valeurs utiles:
 Contrôle visuel attendu:
 
 - tu vois la console d'administration Keycloak
-- le realm actif affiché en haut à gauche est `company`
+- tu es connecté sur l'admin Keycloak
 
 Capture suggérée:
 
-- page d'accueil de l'admin Keycloak avec le realm `company` sélectionné
+- page d'accueil de l'admin Keycloak
 
-## Checklist 2 - Création du client Grafana
+## Checklist 2 - Création du realm
+
+Chemin:
+
+- sélecteur de realm -> `Create realm`
+
+Valeur à saisir:
+
+| Champ | Valeur |
+| --- | --- |
+| Realm name | `company` |
+
+Réglages recommandés:
+
+- `User registration`: `OFF`
+- `Login with email`: `ON`
+- `Duplicate emails`: `OFF`
+- `Verify email`: `ON`
+- `Forgot password`: `ON`
+- `Remember me`: `ON`
+
+Contrôle visuel attendu:
+
+- le realm `company` apparaît dans le sélecteur
+- le realm actif devient `company`
+
+Capture suggérée:
+
+- écran de création du realm
+
+## Checklist 3 - Création des rôles
+
+Chemin:
+
+- `Realm roles`
+
+Rôles à créer:
+
+| Rôle | Usage |
+| --- | --- |
+| `platform-admin` | admin Grafana |
+| `manager` | éditeur Grafana |
+| `user` | utilisateur standard |
+
+Contrôle visuel attendu:
+
+- les trois rôles sont visibles dans la liste
+
+Capture suggérée:
+
+- liste des rôles du realm
+
+## Checklist 4 - Création des groupes
+
+Chemin:
+
+- `Groups`
+
+Groupes à créer:
+
+| Groupe | Rôle associé |
+| --- | --- |
+| `admins` | `platform-admin` |
+| `managers` | `manager` |
+| `employees` | `user` |
+
+A faire:
+
+1. Créer les groupes
+2. Ouvrir chaque groupe
+3. Aller dans `Role mapping`
+4. Assigner le rôle de realm correspondant
+
+Contrôle visuel attendu:
+
+- chaque groupe a bien son rôle associé
+
+Capture suggérée:
+
+- écran `Role mapping` d'un groupe
+
+## Checklist 5 - Création des utilisateurs
+
+Chemin:
+
+- `Users` -> `Add user`
+
+Exemples utiles:
+
+| Utilisateur | Groupe |
+| --- | --- |
+| `owner@company.local` | `admins` |
+| `manager1@company.local` | `managers` |
+| `user1@company.local` | `employees` |
+
+A faire:
+
+1. Créer l'utilisateur
+2. Définir son mot de passe dans `Credentials`
+3. Lui affecter un groupe dans `Groups`
+
+Contrôle visuel attendu:
+
+- l'utilisateur est `Enabled`
+- il a un mot de passe
+- il est rattaché au bon groupe
+
+Capture suggérée:
+
+- fiche d'un utilisateur avec son groupe
+
+## Checklist 6 - Création du client Grafana
 
 Chemin:
 
@@ -63,7 +175,7 @@ Capture suggérée:
 
 - écran `Create client` rempli
 
-## Checklist 3 - Capacités du client
+## Checklist 7 - Capacités du client
 
 Ecran:
 
@@ -92,7 +204,7 @@ Capture suggérée:
 
 - écran de capacité avec les bons switches
 
-## Checklist 4 - URLs du client
+## Checklist 8 - URLs du client
 
 Ecran:
 
@@ -121,7 +233,7 @@ Capture suggérée:
 
 - écran login settings complété
 
-## Checklist 5 - Secret du client
+## Checklist 9 - Secret du client
 
 Chemin:
 
@@ -151,7 +263,7 @@ Capture suggérée:
 
 - onglet `Credentials`
 
-## Checklist 6 - Redémarrage Grafana
+## Checklist 10 - Redémarrage Grafana
 
 Commande:
 
@@ -170,7 +282,7 @@ Si besoin:
 docker compose logs -f grafana
 ```
 
-## Checklist 7 - Gestion des droits
+## Checklist 11 - Gestion des droits
 
 Objectif:
 
@@ -185,10 +297,6 @@ Mapping configuré côté Grafana:
 | autre cas | `Viewer` |
 
 ### Approche A - Par groupes
-
-Chemin:
-
-- `Groups`
 
 Bon réflexe:
 
@@ -227,26 +335,7 @@ Capture suggérée:
 - écran `Role mapping` d'un groupe
 - écran `Role mapping` d'un utilisateur
 
-## Checklist 8 - Utilisateur de test
-
-Option 1:
-
-- utiliser `owner@company.local`
-- mot de passe initial: `ChangeMe123!`
-
-Option 2:
-
-- créer un nouvel utilisateur dans `Users`
-- définir le mot de passe dans `Credentials`
-- lui affecter un groupe ou un rôle
-
-Contrôle visuel attendu:
-
-- l'utilisateur est `Enabled`
-- le mot de passe est défini
-- l'utilisateur a le bon groupe ou le bon rôle
-
-## Checklist 9 - Test SSO final
+## Checklist 12 - Test SSO final
 
 Chemin de test:
 
@@ -266,11 +355,13 @@ Contrôle visuel attendu:
 - l'utilisateur apparaît connecté dans Grafana
 - son rôle est cohérent avec ce qui a été assigné dans Keycloak
 
-## Checklist 10 - Diagnostic rapide
+## Checklist 13 - Diagnostic rapide
 
 Si ça ne fonctionne pas, vérifie dans cet ordre:
 
 - le realm actif est bien `company`
+- les rôles `platform-admin`, `manager` et `user` existent
+- les groupes sont bien créés et mappés
 - le client s'appelle bien `grafana-oauth`
 - le secret du client est bien le même dans Keycloak et dans `.env`
 - l'URI `http://localhost:3000/login/generic_oauth` est présente dans `Valid redirect URIs`
@@ -288,6 +379,8 @@ docker compose logs -f grafana
 
 Tu peux considérer que la configuration est bonne si:
 
+- le realm `company` existe
+- les rôles et groupes existent
 - le client `grafana-oauth` existe
 - le secret est synchronisé avec `.env`
 - un utilisateur se connecte à Grafana via Keycloak
