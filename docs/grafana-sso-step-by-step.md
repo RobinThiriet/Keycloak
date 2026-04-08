@@ -2,25 +2,15 @@
 
 ## Objectif
 
-Déployer `Grafana` avec Docker Compose et apprendre à tout configurer manuellement dans `Keycloak`:
+Construire une plateforme `Keycloak + Grafana` depuis zéro, puis mettre en place une authentification SSO OpenID Connect pour Grafana en configurant Keycloak entièrement à la main.
 
-- créer un realm
-- créer les rôles
-- créer les groupes
-- créer les utilisateurs
-- créer le client OpenID Connect Grafana
-- tester le SSO et les droits
+Ce guide couvre:
 
-Après avoir suivi ce guide, tu dois pouvoir refaire l'intégration sans dépendre du fichier `realm/company-realm.json`.
-
-## Ce que le dépôt contient déjà
-
-Le dépôt contient un realm d'exemple dans [company-realm.json](/root/Keycloak/realm/company-realm.json), mais dans ce guide nous allons volontairement faire la configuration à la main dans l'interface Keycloak pour comprendre chaque étape.
-
-Tu peux donc utiliser ce guide de deux manières:
-
-- mode apprentissage: tu crées tout manuellement
-- mode accéléré: tu t'inspires du realm JSON déjà fourni
+- le démarrage de la stack Docker
+- la création du realm `company`
+- la création des rôles, groupes et utilisateurs
+- la création du client OpenID Connect `grafana-oauth`
+- le test fonctionnel du SSO et des droits Grafana
 
 ## Prérequis
 
@@ -28,7 +18,7 @@ Tu peux donc utiliser ce guide de deux manières:
 - Ports libres: `3000`, `8080`, `5432`, `9000`
 - Accès au dépôt local
 
-## Etape 1 - Préparer les variables
+## Etape 1 - Préparer l'environnement
 
 Copie le fichier d'exemple:
 
@@ -36,7 +26,7 @@ Copie le fichier d'exemple:
 cp .env.example .env
 ```
 
-Vérifie au minimum les variables suivantes dans `.env`:
+Vérifie les variables importantes:
 
 ```env
 KC_BOOTSTRAP_ADMIN_USERNAME=admin
@@ -60,7 +50,7 @@ GRAFANA_OAUTH_CLIENT_SECRET=ChangeThisGrafanaClientSecret!
 docker compose up -d --build
 ```
 
-## Etape 3 - Vérifier les services
+## Etape 3 - Vérifier l'accès aux services
 
 Interfaces attendues:
 
@@ -71,150 +61,126 @@ Interfaces attendues:
 
 ## Etape 4 - Se connecter à l'administration Keycloak
 
-Connecte-toi à l'admin Keycloak sur `http://localhost:8080/admin` avec le compte bootstrap défini dans `.env`.
+Connecte-toi à `http://localhost:8080/admin` avec le compte bootstrap défini dans `.env`.
 
-Au premier accès, tu arrives en général sur le realm `master`.
+Au premier démarrage, seul le realm `master` doit exister.
 
-## Etape 5 - Créer le realm manuellement
+## Etape 5 - Créer le realm `company`
 
 Dans Keycloak:
 
 1. Ouvre le sélecteur de realm en haut à gauche
 2. Clique sur `Create realm`
-3. Renseigne `Realm name`: `company`
-4. Clique sur `Create`
+3. Saisis `company`
+4. Valide la création
 
-Tu peux ensuite ajuster les paramètres généraux du realm.
+Réglages recommandés pour le realm:
 
-Réglages recommandés pour rester proche de l'exemple du dépôt:
+- `User registration`: `OFF`
+- `Login with email`: `ON`
+- `Duplicate emails`: `OFF`
+- `Verify email`: `ON`
+- `Forgot password`: `ON`
+- `Remember me`: `ON`
 
-- `User registration`: désactivé
-- `Login with email`: activé
-- `Duplicate emails`: désactivé
-- `Verify email`: activé
-- `Forgot password`: activé
-- `Remember me`: activé
-
-Contrôle attendu:
+Résultat attendu:
 
 - le realm actif devient `company`
 
-## Etape 6 - Créer les rôles du realm
+## Etape 6 - Créer les rôles de realm
 
-Dans Keycloak:
-
-1. Ouvre `Realm roles`
-2. Clique sur `Create role`
-3. Crée les rôles suivants:
+Dans `Realm roles`, crée les rôles suivants:
 
 - `platform-admin`
 - `manager`
 - `user`
 
-Descriptions conseillées:
+Usage recommandé:
 
-- `platform-admin`: administration de la plateforme
-- `manager`: droits avancés sur les applications métier
-- `user`: utilisateur standard
-
-Pourquoi ces rôles:
-
-- Grafana lira ces rôles pour attribuer ses propres droits
+- `platform-admin`: administration Grafana
+- `manager`: édition Grafana
+- `user`: accès standard
 
 ## Etape 7 - Créer les groupes
 
-Dans Keycloak:
-
-1. Ouvre `Groups`
-2. Crée les groupes suivants:
+Dans `Groups`, crée les groupes suivants:
 
 - `admins`
 - `managers`
 - `employees`
 
-Ensuite, pour chaque groupe:
+Pour chaque groupe, ouvre `Role mapping` et attribue:
 
-1. Ouvre le groupe
-2. Va dans `Role mapping`
-3. Assigne le rôle correspondant
+- `admins` -> `platform-admin`
+- `managers` -> `manager`
+- `employees` -> `user`
 
-Mapping recommandé:
+Résultat attendu:
 
-- groupe `admins` -> rôle `platform-admin`
-- groupe `managers` -> rôle `manager`
-- groupe `employees` -> rôle `user`
+- les droits fonctionnels sont gérés par groupes plutôt que manuellement utilisateur par utilisateur
 
-Pourquoi utiliser les groupes:
+## Etape 8 - Créer les utilisateurs de test
 
-- c'est plus propre que d'affecter les rôles utilisateur par utilisateur
-- ça facilite la maintenance quand tu ajoutes du monde
+Dans `Users`, crée au minimum trois comptes:
 
-## Etape 8 - Créer un utilisateur de test
+- un compte admin
+- un compte manager
+- un compte standard
 
-Dans Keycloak:
+Exemple:
 
-1. Ouvre `Users`
-2. Clique sur `Add user`
-3. Renseigne par exemple:
+- `admin1@company.local`
+- `manager1@company.local`
+- `user1@company.local`
 
-- `Username`: `owner@company.local`
-- `Email`: `owner@company.local`
-- `First name`: `Platform`
-- `Last name`: `Owner`
+Pour chaque utilisateur:
 
-4. Sauvegarde
+1. crée le compte
+2. définis un mot de passe dans `Credentials`
+3. assigne le bon groupe dans `Groups`
 
-Ensuite:
+Exemple de répartition:
 
-1. Va dans `Credentials`
-2. Défini un mot de passe, par exemple `ChangeMe123!`
-3. Choisis si le mot de passe est temporaire ou non
+- `admin1@company.local` -> `admins`
+- `manager1@company.local` -> `managers`
+- `user1@company.local` -> `employees`
 
-Puis donne les droits à l'utilisateur avec l'une des deux méthodes suivantes:
+## Etape 9 - Créer le client Grafana
 
-- méthode recommandée: onglet `Groups` puis ajout au groupe `admins`
-- méthode découverte: onglet `Role mapping` puis ajout direct du rôle `platform-admin`
+Dans `Clients`:
 
-## Etape 9 - Créer le client Grafana manuellement
+1. clique sur `Create client`
+2. choisis `OpenID Connect`
+3. saisis `grafana-oauth`
+4. passe à l'étape suivante
 
-Dans l'admin Keycloak:
+Réglages de capacité:
 
-1. Ouvre `Clients`
-2. Clique sur `Create client`
-3. Renseigne `Client type`: `OpenID Connect`
-4. Renseigne `Client ID`: `grafana-oauth`
-5. Clique sur `Next`
+- `Client authentication`: `ON`
+- `Authorization`: `OFF`
+- `Standard flow`: `ON`
+- `Direct access grants`: `OFF`
+- `Implicit flow`: `OFF`
+- `Service accounts roles`: `OFF`
 
-Sur l'écran de capacité:
+Réglages d'URL:
 
-1. Active `Client authentication`
-2. Laisse `Standard flow` activé
-3. Désactive `Direct access grants`
-4. Désactive `Implicit flow`
-5. Désactive `Service accounts roles`
-6. Clique sur `Next`
-
-Sur l'écran de login:
-
-1. `Root URL`: `http://localhost:3000`
-2. `Home URL`: `http://localhost:3000`
-3. `Valid redirect URIs`: `http://localhost:3000/login/generic_oauth`
-4. `Valid post logout redirect URIs`: `http://localhost:3000`
-5. `Web origins`: `http://localhost:3000`
-6. Clique sur `Save`
+- `Root URL`: `http://localhost:3000`
+- `Home URL`: `http://localhost:3000`
+- `Valid redirect URIs`: `http://localhost:3000/login/generic_oauth`
+- `Valid post logout redirect URIs`: `http://localhost:3000`
+- `Web origins`: `http://localhost:3000`
 
 ## Etape 10 - Récupérer le secret du client
 
-Une fois le client créé:
+Dans `Clients` -> `grafana-oauth` -> `Credentials`:
 
-1. Ouvre `Clients` -> `grafana-oauth`
-2. Va dans l'onglet `Credentials`
-3. Copie le `Client secret`
-4. Mets cette valeur dans `.env` pour `GRAFANA_OAUTH_CLIENT_SECRET`
+1. copie le `Client secret`
+2. colle-le dans `.env` à la variable `GRAFANA_OAUTH_CLIENT_SECRET`
 
-Si tu veux utiliser un autre `Client ID`, mets aussi la même valeur dans `GRAFANA_OAUTH_CLIENT_ID`.
+Si tu changes le `Client ID` dans Keycloak, reporte la même valeur dans `GRAFANA_OAUTH_CLIENT_ID`.
 
-Redémarre ensuite Grafana:
+Applique ensuite la configuration à Grafana:
 
 ```bash
 docker compose up -d grafana
@@ -222,58 +188,55 @@ docker compose up -d grafana
 
 ## Etape 11 - Comprendre le mapping des droits Grafana
 
-Le rôle Grafana est déterminé à partir des rôles Keycloak par la configuration Docker de Grafana.
+Grafana attribue ses droits à partir des rôles de realm Keycloak.
 
-Le mapping actuellement prévu dans le dépôt est:
+Mapping configuré dans ce projet:
 
-- `platform-admin` donne `Admin`
-- `manager` donne `Editor`
-- tout autre utilisateur authentifié devient `Viewer`
+- `platform-admin` -> `Admin`
+- `manager` -> `Editor`
+- tout autre utilisateur authentifié -> `Viewer`
 
-Concrètement:
+Conséquence pratique:
 
 - un utilisateur du groupe `admins` devient `Admin`
 - un utilisateur du groupe `managers` devient `Editor`
 - un utilisateur du groupe `employees` devient `Viewer`
 
-## Etape 12 - Créer d'autres utilisateurs pour tester les droits
+## Etape 12 - Tester le SSO
 
-Crée au moins trois comptes de test pour bien comprendre:
+1. ouvre `http://localhost:3000`
+2. clique sur `Sign in with Keycloak SSO`
+3. connecte-toi avec un utilisateur Keycloak
+4. valide le retour vers Grafana
 
-- un compte admin dans `admins`
-- un compte manager dans `managers`
-- un compte standard dans `employees`
+Répète le test avec plusieurs profils pour valider le mapping des droits.
 
-Exemple:
+## Etape 13 - Vérifier les rôles dans Grafana
 
-- `admin1@company.local` -> groupe `admins`
-- `manager1@company.local` -> groupe `managers`
-- `user1@company.local` -> groupe `employees`
+Contrôles conseillés:
 
-## Etape 13 - Tester la connexion SSO
+- le compte admin doit obtenir un rôle `Admin`
+- le compte manager doit obtenir un rôle `Editor`
+- le compte standard doit obtenir un rôle `Viewer`
 
-1. Ouvre `http://localhost:3000`
-2. Clique sur `Sign in with Keycloak SSO`
-3. Authentifie-toi sur Keycloak
-4. Valide le retour vers Grafana
+Si le rôle ne correspond pas:
 
-Après connexion, vérifie dans Grafana si le profil obtenu correspond bien au rôle attendu.
-
-Fais le test avec plusieurs utilisateurs pour bien visualiser la différence entre `Admin`, `Editor` et `Viewer`.
+- vérifie le groupe de l'utilisateur dans Keycloak
+- vérifie le `Role mapping` du groupe
+- vérifie que Grafana a bien redémarré après la mise à jour du secret
 
 ## Etape 14 - Dépannage rapide
 
-Si le bouton SSO apparaît mais que la connexion échoue:
+Si la connexion SSO échoue:
 
-- vérifie que `KEYCLOAK_PUBLIC_URL` est accessible depuis ton navigateur
-- vérifie que `KEYCLOAK_INTERNAL_URL` est résolu depuis le conteneur Grafana
-- vérifie que le secret Grafana dans `.env` correspond exactement au secret du client Keycloak
-- vérifie que `Valid redirect URIs` contient bien `http://localhost:3000/login/generic_oauth`
-- vérifie que le client a bien `Client authentication` activé
-- vérifie que l'utilisateur testé est bien dans le realm `company`
-- vérifie que l'utilisateur a bien un rôle ou un groupe cohérent avec ce que tu attends
+- vérifie que `KEYCLOAK_PUBLIC_URL` est accessible depuis le navigateur
+- vérifie que `KEYCLOAK_INTERNAL_URL` est joignable depuis le conteneur Grafana
+- vérifie que le secret du client est identique dans Keycloak et dans `.env`
+- vérifie que `http://localhost:3000/login/generic_oauth` est présent dans `Valid redirect URIs`
+- vérifie que `Client authentication` est bien activé
+- vérifie que l'utilisateur testé appartient au realm `company`
 
-Consulte les logs:
+Logs utiles:
 
 ```bash
 docker compose logs -f keycloak
@@ -285,14 +248,12 @@ docker compose logs -f grafana
 Pour un environnement réel:
 
 - remplace toutes les valeurs de démonstration
-- publie Grafana et Keycloak derrière HTTPS
-- remplace `localhost` par tes vrais noms DNS
-- ajoute les URI de redirection et origines exactes dans Keycloak
+- publie Keycloak et Grafana derrière HTTPS
+- remplace `localhost` par tes noms DNS réels
+- ajuste les `redirect URIs`, `post logout redirect URIs` et `web origins`
 - sauvegarde les volumes Docker
 
 ## Exemple production
-
-Exemple de valeurs:
 
 ```env
 KC_HOSTNAME=sso.example.com
@@ -301,7 +262,7 @@ KEYCLOAK_INTERNAL_URL=http://keycloak:8080
 GRAFANA_ROOT_URL=https://grafana.example.com
 ```
 
-Dans ce cas, mets à jour le client `grafana-oauth`:
+Dans ce cas, configure le client `grafana-oauth` avec:
 
 - `Valid redirect URIs`: `https://grafana.example.com/login/generic_oauth`
 - `Valid post logout redirect URIs`: `https://grafana.example.com`
@@ -310,10 +271,10 @@ Dans ce cas, mets à jour le client `grafana-oauth`:
 
 ## Résultat attendu
 
-Une fois la configuration en place:
+À la fin du guide:
 
-- tu sais créer un realm Keycloak à la main
-- tu sais créer des rôles, groupes et utilisateurs
-- tu sais créer un client OIDC pour Grafana
-- tu sais piloter les droits Grafana depuis Keycloak
-- tu peux reproduire l'intégration sans dépendre du realm d'exemple du dépôt
+- Keycloak est déployé proprement
+- le realm `company` est créé à la main
+- Grafana est intégré comme application tierce
+- le SSO fonctionne
+- les droits Grafana sont pilotés depuis Keycloak

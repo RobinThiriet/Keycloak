@@ -27,7 +27,7 @@ Ecran à ouvrir:
 A vérifier:
 
 - tu peux te connecter avec le compte admin bootstrap
-- le realm `company` est visible dans le sélecteur de realm
+- seul le realm `master` existe au premier démarrage
 
 Valeurs utiles:
 
@@ -134,7 +134,7 @@ Exemples utiles:
 
 | Utilisateur | Groupe |
 | --- | --- |
-| `owner@company.local` | `admins` |
+| `admin1@company.local` | `admins` |
 | `manager1@company.local` | `managers` |
 | `user1@company.local` | `employees` |
 

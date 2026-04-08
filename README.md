@@ -1,15 +1,23 @@
-# Keycloak + Grafana SSO Stack
+# Keycloak + Grafana SSO From Scratch
 
-Stack Docker Compose prête à l'emploi pour déployer `Keycloak`, `PostgreSQL` et `Grafana` avec une intégration SSO OpenID Connect.
+Stack Docker Compose professionnelle pour déployer `Keycloak`, `PostgreSQL` et `Grafana`, puis configurer manuellement un SSO OpenID Connect de bout en bout.
 
-Le projet fournit:
+Le dépôt est volontairement orienté `from scratch`:
 
-- un déploiement local simple avec `docker compose`
-- un realm Keycloak `company` importé automatiquement
-- un thème de connexion personnalisé
-- une configuration Grafana compatible SSO Keycloak
-- un guide pour construire manuellement le realm, les rôles, les groupes, les utilisateurs et le client Grafana dans Keycloak
-- une documentation GitHub exploitable en démonstration, recette et base projet
+- aucun realm métier n'est préchargé
+- aucune donnée de démonstration n'est importée
+- la documentation explique comment construire la configuration dans Keycloak
+- Grafana est prêt à consommer un client OIDC que tu créeras toi-même
+
+## Objectif du projet
+
+Ce projet sert à:
+
+- démarrer rapidement une base technique Keycloak + Grafana
+- apprendre à créer un realm Keycloak propre
+- comprendre la création des rôles, groupes et utilisateurs
+- connecter une application tierce à Keycloak avec OpenID Connect
+- valider un SSO fonctionnel sur Grafana
 
 ## Architecture
 
@@ -41,9 +49,8 @@ Documentation détaillée:
 ├── README.md
 ├── docs/
 │   ├── architecture.md
-│   └── grafana-sso-step-by-step.md
-├── realm/
-│   └── company-realm.json
+│   ├── grafana-sso-step-by-step.md
+│   └── keycloak-admin-checklist.md
 └── themes/
     └── company/
         └── login/
@@ -70,7 +77,7 @@ Documentation détaillée:
 cp .env.example .env
 ```
 
-2. Ajuster les secrets si besoin.
+2. Ajuster les secrets.
 
 3. Lancer la stack:
 
@@ -80,12 +87,12 @@ docker compose up -d --build
 
 4. Ouvrir:
 
-- `http://localhost:8080`
+- `http://localhost:8080/admin`
 - `http://localhost:3000`
 
-## Paramètres SSO recommandés
+## Ce que tu vas configurer à la main
 
-Le dépôt prépare Grafana pour utiliser un client Keycloak nommé `grafana-oauth`, mais la documentation explique comment créer manuellement:
+La documentation du dépôt t'accompagne pour créer manuellement dans Keycloak:
 
 - le realm `company`
 - les rôles `platform-admin`, `manager`, `user`
@@ -93,48 +100,34 @@ Le dépôt prépare Grafana pour utiliser un client Keycloak nommé `grafana-oau
 - les utilisateurs de test
 - le client OIDC `grafana-oauth`
 
-Le mapping de rôles proposé côté Grafana est:
+Le mapping de rôles prévu côté Grafana est:
 
 - `platform-admin` -> `Grafana Admin`
 - `manager` -> `Grafana Editor`
 - utilisateur authentifié -> `Grafana Viewer`
 
-## Identifiants initiaux
-
-Administration Keycloak:
-
-- utilisateur: valeur `KC_BOOTSTRAP_ADMIN_USERNAME`
-- mot de passe: valeur `KC_BOOTSTRAP_ADMIN_PASSWORD`
-
-Utilisateur de démonstration:
-
-- login: `owner@company.local`
-- mot de passe initial: `ChangeMe123!`
-
-Pense à remplacer immédiatement ces valeurs dans un contexte réel.
-
 ## Variables importantes
 
 Exemples présents dans [.env.example](/root/Keycloak/.env.example):
 
+- `KC_BOOTSTRAP_ADMIN_USERNAME`
+- `KC_BOOTSTRAP_ADMIN_PASSWORD`
+- `KEYCLOAK_REALM`
 - `KEYCLOAK_PUBLIC_URL`
 - `KEYCLOAK_INTERNAL_URL`
-- `KEYCLOAK_REALM`
 - `GRAFANA_ROOT_URL`
 - `GRAFANA_OAUTH_CLIENT_ID`
 - `GRAFANA_OAUTH_CLIENT_SECRET`
 
-Le détail du paramétrage manuel est documenté dans [docs/grafana-sso-step-by-step.md](/root/Keycloak/docs/grafana-sso-step-by-step.md).
-
 ## Commandes utiles
 
-Lancer:
+Lancer la stack:
 
 ```bash
 docker compose up -d --build
 ```
 
-Suivre les logs:
+Voir les logs:
 
 ```bash
 docker compose logs -f keycloak
@@ -147,10 +140,11 @@ Arrêter:
 docker compose down
 ```
 
-Réinitialiser complètement:
+Repartir complètement de zéro:
 
 ```bash
 docker compose down -v
+docker compose up -d --build
 ```
 
 ## Recommandations de production
@@ -161,7 +155,7 @@ docker compose down -v
 - mettre à jour les `redirect URIs` et `web origins` dans Keycloak
 - sauvegarder les volumes `postgres_data` et `grafana_data`
 
-## Références utilisées
+## Référence technique
 
 La configuration OAuth Grafana proposée suit la documentation officielle Generic OAuth de Grafana:
 

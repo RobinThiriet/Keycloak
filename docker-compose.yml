@@ -41,12 +41,9 @@ services:
     command:
       - start
       - --optimized
-      - --import-realm
     ports:
       - "${KEYCLOAK_HTTP_PORT:-8080}:8080"
       - "${KEYCLOAK_MANAGEMENT_PORT:-9000}:9000"
-    volumes:
-      - ./realm:/opt/keycloak/data/import:ro
 
   grafana:
     image: grafana/grafana:11.6.0
