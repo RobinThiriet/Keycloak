@@ -32,7 +32,7 @@ Valeurs utiles:
 
 Capture de référence:
 
-![Acces a l administration Keycloak](../images/Screenshot_1.png)
+![Acces a l administration Keycloak](./images/keycloak-admin-login.png)
 
 ## Checklist 2 - Création du realm
 
@@ -57,7 +57,7 @@ Réglages recommandés:
 
 Capture de référence:
 
-![Creation du realm dans Keycloak](../images/Screenshot_2.png)
+![Creation du realm dans Keycloak](./images/keycloak-create-realm.png)
 
 ## Checklist 3 - Création des rôles
 
@@ -96,9 +96,9 @@ A faire:
 
 Captures de référence:
 
-![Vue des groupes dans Keycloak](../images/Screenshot_6.png)
+![Vue des groupes dans Keycloak](./images/keycloak-groups-overview.png)
 
-![Role mapping du groupe admins](../images/Screenshot_4.png)
+![Role mapping du groupe admins](./images/keycloak-group-role-mapping.png)
 
 ## Checklist 5 - Création des utilisateurs
 
@@ -122,9 +122,9 @@ A faire:
 
 Captures de référence:
 
-![Fiche utilisateur dans Keycloak](../images/Screenshot_3.png)
+![Fiche utilisateur dans Keycloak](./images/keycloak-user-details.png)
 
-![Definition du mot de passe utilisateur](../images/Screenshot_5.png)
+![Definition du mot de passe utilisateur](./images/keycloak-user-set-password.png)
 
 ## Checklist 6 - Intégration d'une application tierce
 

@@ -126,7 +126,7 @@ GF_AUTH_DISABLE_LOGIN_FORM=false
 
 Capture de référence:
 
-![Ecran de connexion Grafana](../../images/Screenshot_12.png)
+![Ecran de connexion Grafana](../images/grafana-login-screen.png)
 
 ## Mapping des rôles
 
@@ -167,15 +167,15 @@ Si le login réussit mais que les droits sont faux:
 
 Les captures fournies dans le dépôt peuvent être utilisées comme support visuel pendant l'intégration:
 
-- [Screenshot_1.png](/root/Keycloak/images/Screenshot_1.png)
-- [Screenshot_2.png](/root/Keycloak/images/Screenshot_2.png)
-- [Screenshot_3.png](/root/Keycloak/images/Screenshot_3.png)
-- [Screenshot_4.png](/root/Keycloak/images/Screenshot_4.png)
-- [Screenshot_5.png](/root/Keycloak/images/Screenshot_5.png)
-- [Screenshot_6.png](/root/Keycloak/images/Screenshot_6.png)
-- [Screenshot_7.png](/root/Keycloak/images/Screenshot_7.png)
-- [Screenshot_8.png](/root/Keycloak/images/Screenshot_8.png)
-- [Screenshot_9.png](/root/Keycloak/images/Screenshot_9.png)
-- [Screenshot_10.png](/root/Keycloak/images/Screenshot_10.png)
-- [Screenshot_11.png](/root/Keycloak/images/Screenshot_11.png)
-- [Screenshot_12.png](/root/Keycloak/images/Screenshot_12.png)
+- [keycloak-admin-login.png](/root/Keycloak/docs/images/keycloak-admin-login.png)
+- [keycloak-create-realm.png](/root/Keycloak/docs/images/keycloak-create-realm.png)
+- [keycloak-user-details.png](/root/Keycloak/docs/images/keycloak-user-details.png)
+- [keycloak-group-role-mapping.png](/root/Keycloak/docs/images/keycloak-group-role-mapping.png)
+- [keycloak-user-set-password.png](/root/Keycloak/docs/images/keycloak-user-set-password.png)
+- [keycloak-groups-overview.png](/root/Keycloak/docs/images/keycloak-groups-overview.png)
+- [keycloak-client-grafana-settings.png](/root/Keycloak/docs/images/keycloak-client-grafana-settings.png)
+- [keycloak-client-grafana-authentication.png](/root/Keycloak/docs/images/keycloak-client-grafana-authentication.png)
+- [keycloak-client-grafana-credentials.png](/root/Keycloak/docs/images/keycloak-client-grafana-credentials.png)
+- [grafana-sso-error-page-not-found.png](/root/Keycloak/docs/images/grafana-sso-error-page-not-found.png)
+- [grafana-sso-realm-url.png](/root/Keycloak/docs/images/grafana-sso-realm-url.png)
+- [grafana-login-screen.png](/root/Keycloak/docs/images/grafana-login-screen.png)
