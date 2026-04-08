@@ -30,6 +30,7 @@ Documentation détaillée:
 
 - [Architecture détaillée](/root/Keycloak/docs/architecture.md)
 - [Guide pas à pas Grafana SSO](/root/Keycloak/docs/grafana-sso-step-by-step.md)
+- [Checklist visuelle admin Keycloak](/root/Keycloak/docs/keycloak-admin-checklist.md)
 
 ## Structure du dépôt
 
