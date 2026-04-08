@@ -101,7 +101,7 @@ Dans `Clients` -> `grafana-oauth` -> `Credentials`:
 
 ### Option recommandée
 
-Utiliser la stack séparée fournie dans `deployments/grafana/`.
+Utiliser la stack séparée fournie dans `deployments/grafana/`, sans injecter la configuration SSO par variables.
 
 Exemple:
 
@@ -111,34 +111,128 @@ cp .env.example .env
 docker compose up -d
 ```
 
-Dans ce mode séparé:
+Dans ce mode:
 
 - Grafana tourne dans sa propre stack
 - Keycloak reste dans la stack IAM
-- `KEYCLOAK_INTERNAL_URL` utilise `http://host.docker.internal:8080`
+- la configuration SSO se fait directement dans l'interface Grafana
+- les paramètres OAuth ne sont pas imposés par des variables d'environnement
 
-Exemple de variables à injecter dans la stack Grafana:
+### Pourquoi cette approche
+
+Si tu définis `GF_AUTH_GENERIC_OAUTH_*` dans l'environnement:
+
+- Grafana prend ces valeurs comme source de vérité
+- le paramétrage manuel dans le GUI devient plus difficile à comprendre
+- certaines options peuvent sembler "bloquées" ou déjà remplies par l'infrastructure
+
+Pour un apprentissage clair, il est préférable de:
+
+- garder un `docker-compose` Grafana minimal
+- configurer Generic OAuth directement dans l'interface Grafana
+
+### Variables minimales réellement utiles
+
+Dans la stack Grafana fournie, seules les variables d'exploitation locale sont conservées:
 
 ```env
+GF_SECURITY_ADMIN_USER=admin
+GF_SECURITY_ADMIN_PASSWORD=ChangeThisGrafanaAdminPassword!
 GF_SERVER_ROOT_URL=http://localhost:3000
-GF_AUTH_GENERIC_OAUTH_ENABLED=true
-GF_AUTH_GENERIC_OAUTH_NAME=Keycloak SSO
-GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP=true
-GF_AUTH_GENERIC_OAUTH_CLIENT_ID=grafana-oauth
-GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=ChangeThisGrafanaClientSecret!
-GF_AUTH_GENERIC_OAUTH_SCOPES=openid profile email offline_access roles
-GF_AUTH_GENERIC_OAUTH_AUTH_URL=http://localhost:8080/realms/Grafana/protocol/openid-connect/auth
-GF_AUTH_GENERIC_OAUTH_TOKEN_URL=http://keycloak:8080/realms/Grafana/protocol/openid-connect/token
-GF_AUTH_GENERIC_OAUTH_API_URL=http://keycloak:8080/realms/Grafana/protocol/openid-connect/userinfo
-GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH=preferred_username
-GF_AUTH_GENERIC_OAUTH_NAME_ATTRIBUTE_PATH=name
-GF_AUTH_GENERIC_OAUTH_EMAIL_ATTRIBUTE_PATH=email
-GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH=contains(realm_access.roles[*], 'platform-admin') && 'Admin' || contains(realm_access.roles[*], 'manager') && 'Editor' || 'Viewer'
-GF_AUTH_GENERIC_OAUTH_USE_REFRESH_TOKEN=true
-GF_AUTH_SIGNOUT_REDIRECT_URL=http://localhost:8080/realms/Grafana/protocol/openid-connect/logout?post_logout_redirect_uri=http://localhost:3000
-GF_USERS_AUTO_ASSIGN_ORG_ROLE=Viewer
-GF_AUTH_DISABLE_LOGIN_FORM=false
 ```
+
+### Configuration manuelle dans le GUI Grafana
+
+Dans Grafana:
+
+1. ouvre `Administration`
+2. ouvre `Authentication`
+3. ouvre `Generic OAuth`
+4. active `Generic OAuth`
+
+Capture de référence:
+
+![Configuration Generic OAuth dans Grafana](../images/grafana-generic-oauth-settings.png)
+
+Renseigne les champs suivants:
+
+`Display name`
+
+- `Keycloak SSO`
+
+`Client ID`
+
+- `grafana-oauth`
+
+`Client secret`
+
+- colle le secret récupéré dans Keycloak
+
+`Auth style`
+
+- `AutoDetect`
+
+`Scopes`
+
+- `openid profile email offline_access roles`
+
+`Auth URL`
+
+- `http://localhost:8080/realms/Grafana/protocol/openid-connect/auth`
+
+`Token URL`
+
+- si Grafana tourne dans Docker: `http://host.docker.internal:8080/realms/Grafana/protocol/openid-connect/token`
+- si Grafana tourne hors Docker: `http://localhost:8080/realms/Grafana/protocol/openid-connect/token`
+
+`API URL`
+
+- si Grafana tourne dans Docker: `http://host.docker.internal:8080/realms/Grafana/protocol/openid-connect/userinfo`
+- si Grafana tourne hors Docker: `http://localhost:8080/realms/Grafana/protocol/openid-connect/userinfo`
+
+`Allow sign up`
+
+- `ON`
+
+`Auto login`
+
+- `OFF` au début, pour faciliter les tests
+
+`Sign out redirect URL`
+
+- `http://localhost:8080/realms/Grafana/protocol/openid-connect/logout?post_logout_redirect_uri=http://localhost:3000`
+
+Dans la section `User mapping`, renseigne:
+
+`Login field path`
+
+- `preferred_username`
+
+`Name field path`
+
+- `name`
+
+`Email field path`
+
+- `email`
+
+`Role attribute path`
+
+```text
+contains(realm_access.roles[*], 'platform-admin') && 'Admin' || contains(realm_access.roles[*], 'manager') && 'Editor' || 'Viewer'
+```
+
+Puis sauvegarde.
+
+### Quand utiliser les variables d'environnement
+
+L'approche par variables est utile si:
+
+- tu veux automatiser complètement le déploiement
+- tu ne veux pas dépendre d'un réglage manuel dans l'interface
+- tu veux versionner la configuration non sensible
+
+En revanche, pour comprendre le fonctionnement, le GUI est souvent plus pédagogique.
 
 ## Etape 5 - Tester le SSO
 
@@ -175,6 +269,13 @@ Si Grafana redirige vers un mauvais realm:
 - vérifie le nom du realm dans la configuration Grafana
 - redémarre Grafana après modification
 
+Si `User sync failed` apparaît:
+
+- vérifie que l'utilisateur existe bien dans le realm cible
+- vérifie qu'il a un mot de passe
+- vérifie qu'il appartient au bon groupe
+- si Grafana a déjà connu plusieurs tentatives incohérentes, repartir d'un volume Grafana neuf peut simplifier le diagnostic
+
 Si Keycloak renvoie `Page not found`:
 
 - vérifie que le realm existe vraiment
@@ -201,4 +302,5 @@ Les captures fournies dans le dépôt peuvent être utilisées comme support vis
 - [keycloak-client-grafana-credentials.png](/root/Keycloak/docs/images/keycloak-client-grafana-credentials.png)
 - [grafana-sso-error-page-not-found.png](/root/Keycloak/docs/images/grafana-sso-error-page-not-found.png)
 - [grafana-sso-realm-url.png](/root/Keycloak/docs/images/grafana-sso-realm-url.png)
+- [grafana-generic-oauth-settings.png](/root/Keycloak/docs/images/grafana-generic-oauth-settings.png)
 - [grafana-login-screen.png](/root/Keycloak/docs/images/grafana-login-screen.png)
